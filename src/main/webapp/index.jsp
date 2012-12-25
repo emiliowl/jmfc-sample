@@ -91,7 +91,7 @@
 <div class="navbar navbar-fixed-top">
   <div class="navbar-inner">
     <div class="container">
-      <a href="/" class="brand">Embedded Jetty Template</a>
+      <a href="/" class="brand">Modified Embedded Jetty Template</a>
       <!--
       IMPORTANT:
       This is Heroku specific markup. Remove to customize.
