@@ -13,11 +13,18 @@
     <servlet-name>hello</servlet-name>
     <servlet-class>com.example.HelloServlet</servlet-class>
   </servlet>
+    <servlet>
+    <servlet-name>book-uploader</servlet-name>
+    <servlet-class>com.example.upload.BookUploader</servlet-class>
+  </servlet>
 
   <servlet-mapping>
     <servlet-name>hello</servlet-name>
     <url-pattern>/hello</url-pattern>
   </servlet-mapping>
-
+  <servlet-mapping>
+    <servlet-name>book-uploader</servlet-name>
+    <url-pattern>/uploadBook</url-pattern>
+  </servlet-mapping>
 
 </web-app>

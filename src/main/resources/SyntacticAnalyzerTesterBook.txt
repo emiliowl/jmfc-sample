@@ -1,0 +1,23 @@
+11234*67890 Esta linha sera desprezada pois e comentario
+      01 StudentDetails.
+        02 StudentId        	PIC 9(7). 
+        02 StudentName. 
+          03 FirstName     		PIC XXXXXXXXXX.
+          03 Surname       		PIC X(15).  
+          03 NameGroup.
+            04 NameX                    PIC XX.
+            04 NameY                    PIC XX.                  
+        02 Telefone OCCURS 4 TIMES PIC X(10).
+        02 QtCelular                PIC 9.
+        02 Celular OCCURS 3 TIMES DEPENDING ON QtCelular.
+          03 DddCel                 PIC 9999.
+          03 NumCel                 PIC 9(9).
+        02 DateOfBirth.
+         03 DayOfBirth    		PIC 9(2).
+         03 MonthOfBirth  		PIC 9(2).
+         03 YearOfBirth   		PIC 9999.	
+        02 Teste1    		PIC +9V9.
+        02 Teste2  		PIC S99V9(3) COMP-3.
+        02 Teste3   		PIC 9(4)V99.	
+        02 Teste4		PIC 9(2)V9(3).
+        02 Teste5		PIC +9(4)V9(5).        
