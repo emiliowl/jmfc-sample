@@ -2,13 +2,14 @@ package com.example;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.expert.adapter.MFBook;
 import com.expert.jmfc.compiler.SyntacticAnalyzer;
 import com.expert.jmfc.util.Conversor;
 
@@ -22,7 +23,17 @@ public class HelloServlet extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
-		ServletOutputStream out = resp.getOutputStream();
+		resp.setContentType("text/html");
+		PrintWriter out = resp.getWriter();
+		
+		out.print("<html>");
+		out.print("<head>");
+		out.print("<script src=\"/js/jquery.js\" type=\"text/javascript\"></script>");
+		out.print("<script src=\"/js/jquery.cookie.js\" type=\"text/javascript\"></script>");
+		out.print("<script src=\"/js/jquery.hotkeys.js\" type=\"text/javascript\"></script>");
+		out.print("<script src=\"/js/jquery.jstree.js\" type=\"text/javascript\"></script>");
+		out.print("<link type='text/css' rel='stylesheet' href=\"/css/!style.css\" />");
+		out.print("</head>");
 
 		SyntacticAnalyzer syntacticAnalyzer = new SyntacticAnalyzer();
 		String bookText = "";
@@ -41,26 +52,37 @@ public class HelloServlet extends HttpServlet {
 			e.printStackTrace();
 		}
 		
+		out.print("<body>");
+		out.print("<p class='note'>");
+		out.print("EXAMPLE OF THE API FUNCTIONALITY");
+		out.print("\nBOOK: ");
+		out.print("\n################################:\n");
+		out.print(bookText);
+		out.print("\n################################");
+		out.print("<p/>");
 		
-		//Imprimindo o book "original"
-		System.out.println(bookText);
+		out.print("<p class='note'>");
+		out.print("\n\n\nFIELDS PARSED: ");
+		out.print("\n################################:\n");
+		out.print(syntacticAnalyzer.getBook().toString());
+		out.print("\n################################");
+		out.print("<p/>");
 		
-		//Imprimindo todos os fields
-		System.out.println("######### In�cio do print dos fields ######### \n");
-		System.out.println(syntacticAnalyzer.getBook().toString());		
-		System.out.println("\n######### T�rmino do print dos fields ######### \n\n");
-
-		out.write("EXAMPLE OF THE API FUNCTIONALITY".getBytes());
-		out.write("\nBOOK: ".getBytes());
-		out.write("\n################################:\n".getBytes());
-		out.write(bookText.getBytes());
-		out.write("\n################################".getBytes());
+		out.print("<div id=\"demo1\" class=\"demo jstree jstree-0 jstree-default jstree-focused\"></div>");
+		String bookData = new MFBook(syntacticAnalyzer.getBook()).toXml();
+		String jsFunction = "<script type='text/javascript' class='source'>" + 
+				"$(function () {   " +
+				"$('#demo1').jstree({" +
+				"\"xml_data\" : {" +
+				"\"data\" : \"" + bookData + "\", \"xsl\" : \"nest\"}," +
+				"\"plugins\" : [ \"themes\", \"xml_data\" ]" +	
+				"});" +
+				"});" +
+				"</script>";
 		
-		out.write("\n\n\nFIELDS PARSED: ".getBytes());
-		out.write("\n################################:\n".getBytes());
-		out.write(syntacticAnalyzer.getBook().toString().getBytes());
-		out.write("\n################################".getBytes());
-		
+		out.print(jsFunction);
+		out.print("</body>");
+		out.print("</html>");
 		out.flush();
 		out.close();
 	}
