@@ -53,7 +53,7 @@
         </dependency>
         <dependency>
         	<groupId>com.expert.jmfc</groupId>
-        	<artifactId>jmfc-adapter</artifactId>
+        	<artifactId>jmfc-decorator</artifactId>
         	<version>0.0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
