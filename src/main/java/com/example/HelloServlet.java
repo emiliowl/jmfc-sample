@@ -46,35 +46,28 @@ public class HelloServlet extends HttpServlet {
 			
 			 bookText = Conversor.fileToString("target" + File.separator
 					+ "classes" + File.separator
-					+ "SyntacticAnalyzerTesterBook.txt");
+					+ "SyntacticAnalyzerTesterBook.txt").replace("\n", "<br/>");
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
 		out.print("<body>");
-		out.print("<p class='note'>");
+		
 		out.print("EXAMPLE OF THE API FUNCTIONALITY");
-		out.print("\nBOOK: ");
-		out.print("\n################################:\n");
+		out.print("<br/>BOOK: ");
+		out.print("<br/>################################:<br/>");
 		out.print(bookText);
-		out.print("\n################################");
-		out.print("<p/>");
+		out.print("<br/>################################<br/><br/>");
 		
-		out.print("<p class='note'>");
-		out.print("\n\n\nFIELDS PARSED: ");
-		out.print("\n################################:\n");
-		out.print(syntacticAnalyzer.getBook().toString());
-		out.print("\n################################");
-		out.print("<p/>");
-		
+		out.print("<br/>BOOK INTERPRETED: <br/>");
 		out.print("<div id=\"demo1\" class=\"demo jstree jstree-0 jstree-default jstree-focused\"></div>");
 		String bookData = new MFBook(syntacticAnalyzer.getBook()).toXml();
 		String jsFunction = "<script type='text/javascript' class='source'>" + 
 				"$(function () {   " +
 				"$('#demo1').jstree({" +
 				"\"xml_data\" : {" +
-				"\"data\" : \"" + bookData + "\", \"xsl\" : \"nest\"}," +
+				"\"data\" : \"" + bookData.replace("\"", "'") + "\", \"xsl\" : \"nest\"}," +
 				"\"plugins\" : [ \"themes\", \"xml_data\" ]" +	
 				"});" +
 				"});" +
