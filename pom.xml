@@ -52,7 +52,7 @@
         	<version>2.4</version>
         </dependency>
         <dependency>
-        	<groupId>com.expert.jmfc</groupId>
+        	<groupId>com.expert</groupId>
         	<artifactId>jmfc-decorator</artifactId>
         	<version>0.0.1-SNAPSHOT</version>
         </dependency>
