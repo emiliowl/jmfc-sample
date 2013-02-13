@@ -79,7 +79,7 @@ public class BookUploader extends HttpServlet {
 						syntacticAnalyzer.validate(uploadedFile.getAbsolutePath(), item.getName());
 						System.out.println("VALIDEI!");
 						out.print("<br/>BOOK INTERPRETED: <br/>");
-						out.print("<div id=\"demo1\" class=\"demo jstree jstree-0 jstree-default jstree-focused\"></div>");
+						out.print("<div id=\"demo1\" class=\"demo jstree jstree-0 jstree-apple jstree-focused\"></div>");
 						String bookData = new MFBook(syntacticAnalyzer.getBook()).toXml();
 						String jsFunction = "<script type='text/javascript' class='source'>" + 
 								"$(function () {   " +
