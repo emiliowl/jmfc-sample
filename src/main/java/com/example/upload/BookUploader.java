@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -17,6 +19,7 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import com.expert.adapter.MFBook;
+import com.expert.adapter.enumeration.FieldProperties;
 import com.expert.jmfc.compiler.SyntacticAnalyzer;
 
 public class BookUploader extends HttpServlet {
@@ -38,7 +41,13 @@ public class BookUploader extends HttpServlet {
 		out.print("<script src=\"/js/jquery.cookie.js\" type=\"text/javascript\"></script>");
 		out.print("<script src=\"/js/jquery.hotkeys.js\" type=\"text/javascript\"></script>");
 		out.print("<script src=\"/js/jquery.jstree.js\" type=\"text/javascript\"></script>");
-		out.print("<link type='text/css' rel='stylesheet' href=\"/css/!style.css\" />");
+		out.print("<script src=\"http://twitter.github.com/bootstrap/assets/js/bootstrap.js\" type=\"text/javascript\"></script>");
+		out.print("<script src=\"http://twitter.github.com/bootstrap/assets/js/bootstrap-modal.js\" type=\"text/javascript\"></script>");
+		out.print("<link media=\"all\" type=\"text/css\" href=\"http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.23/themes/cupertino/jquery-ui.css\" rel=\"stylesheet\">");
+		out.print("<link href=\"css/bootstrap.css\" rel=\"stylesheet\">");
+		out.print("<link href=\"css/bootstrap-responsive.css\" rel=\"stylesheet\">");
+		out.print("<link href=\"css/docs.css\" rel=\"stylesheet\">");
+		out.print("<link href=\"js/google-code-prettify/prettify.css\" rel=\"stylesheet\">");
 		out.print("</head>");
 		
 		boolean isMultipart = ServletFileUpload.isMultipartContent(req);
@@ -86,13 +95,13 @@ public class BookUploader extends HttpServlet {
 								"$('#demo1').jstree({" +
 								"\"xml_data\" : {" +
 								"\"data\" : \"" + bookData.replace("\"", "'") + "\", \"xsl\" : \"nest\"}," +
-								"\"plugins\" : [ \"themes\", \"xml_data\" ]" +	
-								"});" +
+								"\"plugins\" : [ \"themeroller\", \"xml_data\", \"ui\" ]" +	
+								"}).bind('select_node.jstree', function (event, data) { $('#' + (data.inst.get_text(data.rslt.obj)) + '_modal').modal('show');});" +
 								"});" +
 								"</script>";
 						
 						out.print(jsFunction);
-						
+						out.print(getFieldsInfoDiv(new MFBook(syntacticAnalyzer.getBook())));
 					}
 
 				}
@@ -112,6 +121,42 @@ public class BookUploader extends HttpServlet {
 		out.flush();
 		out.close();
 
+	}
+	
+	//TODO: gambiarra master, necessario extrair para classes helper e rever o modelo Servlet, um JSP faria muito mais sentido
+	private String getFieldsInfoDiv(MFBook mfbook) {
+		String resultString = "";
+		Map<String, Map<FieldProperties, String>> fieldsInfo = mfbook.getFieldsInfo();
+		Iterator<String> fieldsInfoIterator = fieldsInfo.keySet().iterator();
+		while(fieldsInfoIterator.hasNext()) {
+			String fieldName = fieldsInfoIterator.next();
+			resultString += createDiv(fieldName, fieldsInfo.get(fieldName));
+		}
+		
+		return resultString;
+	}
+	
+	//TODO: gambiarra master, necessario extrair para classes helper e rever o modelo Servlet, um JSP faria muito mais sentido
+	private String createDiv(String fieldId, Map<FieldProperties, String> fieldProperties) {
+		String result = "<br/><div id='" + fieldId + "_modal' class='modal hide fade'>";
+		
+		result += "<div class='modal-header'>";
+	    result += "<button type='button' class='close' data-dismiss='modal' aria-hidden='true'>&times;</button>";
+	    result += "<h3>"+ fieldId +"</h3>";
+	    result += "</div>";
+		
+	    result += "<div class='modal-body'>";
+		for(FieldProperties fieldProperty : FieldProperties.values()) {
+			result += "<ul>";
+				result += "<li>";
+					result += fieldProperty.toString() + "[ " + fieldProperties.get(fieldProperty) + " ]";
+				result += "</li>";
+			result += "</ul>";
+		}
+		result += "</div>";
+		
+		result += "</div><br/>";
+		return result;
 	}
 
 }
