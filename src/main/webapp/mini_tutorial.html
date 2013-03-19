@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>JMFConnector</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="author" content="">
+
+<!-- Le styles -->
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/docs.css" rel="stylesheet">
+<link href="js/google-code-prettify/prettify.css" rel="stylesheet">
+
+<!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+<!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+<!-- Le fav and touch icons -->
+<link rel="shortcut icon" href="ico/favicon.ico">
+<link rel="apple-touch-icon-precomposed" sizes="144x144"
+	href="ico/apple-touch-icon-144-precomposed.png">
+<link rel="apple-touch-icon-precomposed" sizes="114x114"
+	href="ico/apple-touch-icon-114-precomposed.png">
+<link rel="apple-touch-icon-precomposed" sizes="72x72"
+	href="ico/apple-touch-icon-72-precomposed.png">
+<link rel="apple-touch-icon-precomposed"
+	href="ico/apple-touch-icon-57-precomposed.png">
+</head>
+
+
+
+
+	<!-- Navbar
+    ================================================== -->
+	<div class="navbar navbar-fixed-top">
+		<div class="navbar-inner">
+			<div class="container">
+				<a class="btn btn-navbar" data-toggle="collapse"
+					data-target=".nav-collapse"> <span class="icon-bar"></span> <span
+					class="icon-bar"></span> <span class="icon-bar"></span>
+				</a> <a class="brand" href="./index.html">JMFConnector</a>
+				<div class="nav-collapse collapse">
+					<ul class="nav">
+						<li class=""><a href="./index.html">Visão Geral</a></li>
+						<li class=""><a href="./demostracao.html">Demostração</a></li>
+						<li class="active"><a href="./mini_tutorial.html">Mini Tutorial</a></li>
+						<li class=""><a href="#">Download</a></li>
+						<li class="divider-vertical"></li>
+						<li class=""><a href="#">Sobre Nós</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="container">
+
+		<!-- Masthead
+================================================== -->
+		<header class="jumbotron masthead">
+		</header>
+
+			<h1>Iniciando com JMFConnector</h1>
+			<p class="lead">Este guia cobre os principios b&aacute;sicos para:</p>
+			<ul class="unstyled">
+				<li><i class="icon-ok"></i> <strong>Iniciar um novo projeto Java</strong></li>
+				<li><i class="icon-ok"></i> <strong>Configurar as depend&ecirc;ncias do JMFConnector</strong></li>
+				<li><i class="icon-ok"></i> <strong>Conectar o seu projeto a uma implementa&ccedil;&atilde;o fake de um connector mainframe</strong></li>
+				<li><i class="icon-ok"></i> <strong>Introduzir melhores pr&aacute;ticas para utiliza&ccedil;&atilde;o da ferramenta </strong></li>
+			</ul>
+			<h3>1 Pr&eacute; Requisitos para o tutorial</h3>
+			<p>
+				Assumimos que você já possui experência no desenvolvimento com a linguagem Java e que está utilizando a IDE Eclipse.
+			</p>
+			<p class="alert alert-error"> <strong>Importante:</strong> todo o código fonte do projeto que vamos criar está disponível no GitHub para consulta futura.</p>
+
+			<h3>2 O que é o JMFConnector?</h3>
+			<p>
+				O JMFConnector é uma biblioteca especializada em traduzir BOOKs da Linguagem Cobol para a estruturas de dados no formato de mapas para a Linguagem Java, 
+				tornando o desenvolvimento para as equipes de COBOL e Java muito mais simples e a comunicação entre elas muito mais dinâmica.
+			</p>
+			
+			<h3>3 Arquitetura da solução</h3>
+			<p>
+				O JMFConnector foi arquitetado para ser o menos intrusivo possível.
+				Desta forma ele atua como tradutor entre a sua aplicação e a biblioteca que provê acesso ao Mainframe já utilizada em sua empresa.<br/>
+				O grande benefício de sua utilização está no fato de que todo o mapeamento de BOOKs de entrada e saída é feito pelo JMFConnector de modo que
+				as equipes de Cobol tem apenas o trabalho de disponibilizar os BOOKs em formato TXT enquanto as equipes Java devem apenas conhecer as variáveis existentes nos BOOKs
+				para que possam enviar e receber os dados corretos nas estruturas de mapas disponibilizados pelo JMFConnector.<br/>
+			</p>
+			<p class="alert alert-info"> Diagrama exibindo o funcionamento do JMFConnector </p>
+			<br/>
+			<br/>
+			<br/>
+			<br/>
+			<br/>
+			<br/>
+			<br/>
+			<br/>
+			<br/>
+			
+			<h3>5 Vamos criar um projeto!</h3>
+			<p>
+				Vamos imaginar o seguinte cenário:<br />
+				Você precisa criar uma aplicação Java que vai consultar uma transação cobol para buscar por todos os estudantes cadastrados com matricula ativa e
+				enviar um e-mail com a cobrança.<br />
+				A transação Cobol basicamente recebe como entrada os dados do estudante e retorna se o mesmo está ativo e qual o valor das suas mensalidades para o ano.
+			</p>
+			<p>
+				<span class="label label-info">BOOK de Entrada</span>
+				<pre>
+00100*7890 ENTRADA PARA O PROGRAMA QUE CALCULA PARCELAS DE ESTUDANTE       00100
+00200*7890 COM MATRICULA ATIVA                                             00200
+0030001 STUDENT-INFO.                                                      00300
+00300   02 STUDENT-ID        	PIC 9(7).                                  00300
+00400*0000 CREDENCIAIS PARA CHAMADA DA TRANSACAO                           00400
+0050001 CREDENTIALS.                                                       00500
+00500   02 USER                 PIC X(10).                                 00500
+00500   02 PASSWORD             PIC X(8).                                  00500
+</pre>
+			</p>
+			
+			<p>
+				<span class="label label-info">BOOK de Saída</span>
+				<pre>
+00100*7890 SAIDA PARA O PROGRAMA QUE CALCULA PARCELAS DE ESTUDANTE         00100
+00200*7890 COM MATRICULA ATIVA                                             00200
+0030001 STUDENT-INFO.                                                      00300
+00400   02 STUDENT-ID        	PIC 9(7).                                  00300
+00400   02 STUDENT-NAME.                                                   00400
+00500      03 FIRST-NAME        PIC XXXXXXXXXX.                            00500
+00500      03 SURNAME           PIC X(15).                                 00500
+00500      03 PARENTS-NAMES.                                               00500
+00600         04 FATHER-NAME    PIC XXXXXXXXXX.                            00600
+00600         04 MOTHER-NAME    PIC XXXXXXXXXX.                            00600
+00700*0000 DETALHES DAS PARCELAS DO ESTUDANTE                              00700
+0080001 QT-PARCELAS             PIC 999.                                   00800
+0090001 PARCELAS OCCURS 1 TIMES DEPENDING ON QT-PARCELAS.                  00900                            
+00900   02 NUMERO               PIC 99.                                    00900
+00900   03 VALOR                PIC +9999V99.                              00900
+</pre>				
+			</p>
+			
+			
+			<h3>5 Criando um novo Projeto Java</h3>
+			<p>
+				O JMFConnector é uma biblioteca especializada em traduzir BOOKs da Linguagem Cobol para a estruturas de dados no formato de mapas para a Linguagem Java, 
+				tornando o desenvolvimento para as equipes de COBOL e Java muito mais simples e a comunicação entre elas muito mais dinâmica.
+			</p>
+			
+			<h3>6 Apresentando o Mainframe Connector Mock</h3>
+			<p>
+				O JMFConnector é uma biblioteca especializada em traduzir BOOKs da Linguagem Cobol para a estruturas de dados no formato de mapas para a Linguagem Java, 
+				tornando o desenvolvimento para as equipes de COBOL e Java muito mais simples e a comunicação entre elas muito mais dinâmica.
+			</p>
+			
+			<h3>7 Integrando o projeto com o connector através de data parsing na aplicação</h3>
+			<p>
+				O JMFConnector é uma biblioteca especializada em traduzir BOOKs da Linguagem Cobol para a estruturas de dados no formato de mapas para a Linguagem Java, 
+				tornando o desenvolvimento para as equipes de COBOL e Java muito mais simples e a comunicação entre elas muito mais dinâmica.
+			</p>
+			
+			<h3>8 Integrando o projeto com o connector através do JMFConnector</h3>
+			<p>
+				O JMFConnector é uma biblioteca especializada em traduzir BOOKs da Linguagem Cobol para a estruturas de dados no formato de mapas para a Linguagem Java, 
+				tornando o desenvolvimento para as equipes de COBOL e Java muito mais simples e a comunicação entre elas muito mais dinâmica.
+			</p>
+			
+			<h3>9 Enfrentando mudanças</h3>
+			<p>
+				O JMFConnector é uma biblioteca especializada em traduzir BOOKs da Linguagem Cobol para a estruturas de dados no formato de mapas para a Linguagem Java, 
+				tornando o desenvolvimento para as equipes de COBOL e Java muito mais simples e a comunicação entre elas muito mais dinâmica.
+			</p>
+			
+			<h3>10 Opções de configuração avançada</h3>
+			<p>
+				O JMFConnector é uma biblioteca especializada em traduzir BOOKs da Linguagem Cobol para a estruturas de dados no formato de mapas para a Linguagem Java, 
+				tornando o desenvolvimento para as equipes de COBOL e Java muito mais simples e a comunicação entre elas muito mais dinâmica.
+			</p>
+	</div>
+		<!-- /.marketing -->
+
+		<!-- Footer
+      ================================================== -->
+		<footer class="footer">
+			<p class="pull-right">
+				<a href="#">Back to top</a>
+			</p>
+
+		</footer>
+
+
+	<!-- /container -->
+
+
+
+	<!-- Le javascript
+    ================================================== -->
+	<!-- Placed at the end of the document so the pages load faster -->
+	<script type="text/javascript"
+		src="http://platform.twitter.com/widgets.js"></script>
+	<script src="js/jquery.js"></script>
+	<script src="js/google-code-prettify/prettify.js"></script>
+	<script src="asses/js/bootstrap-transition.js"></script>
+	<script src="js/bootstrap-alert.js"></script>
+	<script src="js/bootstrap-modal.js"></script>
+	<script src="js/bootstrap-dropdown.js"></script>
+	<script src="js/bootstrap-scrollspy.js"></script>
+	<script src="js/bootstrap-tab.js"></script>
+	<script src="js/bootstrap-tooltip.js"></script>
+	<script src="js/bootstrap-popover.js"></script>
+	<script src="js/bootstrap-button.js"></script>
+	<script src="js/bootstrap-collapse.js"></script>
+	<script src="js/bootstrap-carousel.js"></script>
+	<script src="js/bootstrap-typeahead.js"></script>
+	<script src="js/application.js"></script>
+
+
+
+</html>
