@@ -58,7 +58,7 @@
         </dependency>
         <dependency>
         	<groupId>com.expert</groupId>
-        	<artifactId>mf-communicator-MOCK</artifactId>
+        	<artifactId>mf-communicator-mock</artifactId>
         	<version>0.0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
