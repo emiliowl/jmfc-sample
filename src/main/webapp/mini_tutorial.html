@@ -147,15 +147,54 @@
 			
 			<h3>5 Criando um novo Projeto Java</h3>
 			<p>
-				O JMFConnector é uma biblioteca especializada em traduzir BOOKs da Linguagem Cobol para a estruturas de dados no formato de mapas para a Linguagem Java, 
-				tornando o desenvolvimento para as equipes de COBOL e Java muito mais simples e a comunicação entre elas muito mais dinâmica.
+				Vamos criar um novo projeto Java que será executado a partir da linha de comando.
+				O objetivo deste projeto é consultar uma transação Cobol enviando o ID do estudante (que é recebido como parâmetro de entrada) e exibir o retorno da mesma (as parcelas para o ano), posteriormente enviando os dados por e-mail.
+			</p>
+			<p>
+				Nosso projeto Java terá o nome de simple-student-billing, e deverá ser criado conforme padrão de criação de novo aplicativo Java no Eclipse 
+				File > New > Java Application ... Next ... Finish.
+			</p>
+			<p>
+				<img alt="" src="./img/mini_tutorial/new-project.png">
+				<img alt="" src="./img/mini_tutorial/workspace-view.png">
+			</p>
+			<p>
+				Nosso próximo passo será entender como estabelecer a comunicação com a transação mainframe e para isso vamos utilizar
+				a biblioteca que simula uma conexão com o mainframe (mainframe-communicator-mock). 
 			</p>
 			
 			<h3>6 Apresentando o Mainframe Connector Mock</h3>
 			<p>
-				O JMFConnector é uma biblioteca especializada em traduzir BOOKs da Linguagem Cobol para a estruturas de dados no formato de mapas para a Linguagem Java, 
-				tornando o desenvolvimento para as equipes de COBOL e Java muito mais simples e a comunicação entre elas muito mais dinâmica.
+				99% das bibliotecas que existem no mercado para conexão com o mainframe são extremamente simples e se baseiam em manter um arquivo de configuração no classpath da aplicação com dados do ambiente mainframe que será acessado e 
+				através normalmente de uma classe centralizadora enviar um stream de bytes (uma string sequencial) e devolver uma stream de dados (também uma string sequencial).
 			</p>
+			<p>
+				Isso faz com que toda a responsabilidade de estabelecer o protocolo de comunicação entre as aplicações fique a cargo das equipes de desenvolvimento Cobol e Java, que devem manter a comunicação sempre atualizada para garantir 
+				que os dados sejam enviados nas posições corretas e lidos da mesma maneira. <br/><br/>
+				
+				Para simplificar nosso projeto e simular uma chamada a uma biblioteca padrão de comunicação com o mainframe, faremos utilização da biblioteca
+				<strong>mf-communicator-mock</strong> que basicamente, recebe uma string de entrada e caso os dados enviados sejam correspondentes envia de volta a  string configurada.
+			</p>
+			<div class="well">
+				<span class="label label-info">Configuração da biblioteca no classpath:</span><br/><br/>
+				1. Faça 
+				<a href="https://github.com/emiliowl/mf-communicator-MOCK/blob/master/target/mf-communicator-MOCK-0.0.1-SNAPSHOT-jar-with-dependencies.jar">
+				download
+				</a>
+				do projeto em ou se preferir, faça um fork do projeto e gere uma novo Jar.
+				<br/><br/>
+				2. Salve o Jar em local desejado e o adicione ao classpath da aplicação.
+				<br/><br/>
+				<img alt="" src="./img/mini_tutorial/build-path.png">
+				<br/><br/>
+				3. O mainframe-connector-mock funciona como um simulardor simples de request/response para o ambiente mainframe. Basicamente siga os seguintes passos:
+				<ul>
+					<li>Adicione 1 arquivo no classpath da aplicacao com o nome da transacao que você quer chamar finalizando com .tranc (o conteúdo deste arquivo será retornado na chamada da transação).</li>
+					<li>Faça a chamada na transação através da classe ImsConnectMock, chamando seu método call. Lembrando que é necessário chamar getConnection() antes do método call.</li>
+					<li>Garanta que as 8 primeiras posições coincidem com o nome do arquivo que foi adicionado contendo o retorno da transação</li>
+				</ul>
+				<div class="alert alert-success">String result = ImsConnectMock.getConnection().call("<strong style="background-color: yellow;">TRANC01 </strong>HERE_STARTS_THE_TRANC_PARAMETERS"); //dont worry about white spaces after transaction name</div>
+			</div>
 			
 			<h3>7 Integrando o projeto com o connector através de data parsing na aplicação</h3>
 			<p>
