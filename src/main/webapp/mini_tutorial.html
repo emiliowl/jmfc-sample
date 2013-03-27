@@ -181,7 +181,7 @@
 				<a href="https://github.com/emiliowl/mf-communicator-MOCK/blob/master/target/mf-communicator-MOCK-0.0.1-SNAPSHOT-jar-with-dependencies.jar">
 				download
 				</a>
-				do projeto em ou se preferir, faça um fork do projeto e gere uma novo Jar.
+				do projeto ou se preferir, faça um fork do projeto e gere uma novo Jar.
 				<br/><br/>
 				2. Salve o Jar em local desejado e o adicione ao classpath da aplicação.
 				<br/><br/>
@@ -198,8 +198,31 @@
 			
 			<h3>7 Integrando o projeto com o connector através de data parsing na aplicação</h3>
 			<p>
-				O JMFConnector é uma biblioteca especializada em traduzir BOOKs da Linguagem Cobol para a estruturas de dados no formato de mapas para a Linguagem Java, 
-				tornando o desenvolvimento para as equipes de COBOL e Java muito mais simples e a comunicação entre elas muito mais dinâmica.
+				Já sabemos como funciona a biblioteca de comunicação com o mainframe e já temos os books de entrada e saída.
+				Agora precisamos preparar nosso projeto para enviar os parametros esperados pelo mainframe, receber o retorno, tratar os dados recebidos e enviar o e-mail esperado.
+				<br/>
+				<br/>
+				Primeiro vamos analisar o book de entrada:
+				Devemos enviar sete números na sequência representando o STUDENT-ID (matrícula), e enviar as credenciais para acesso á transação USER (alfa-numérico com 10 posições) e PASSWORD (alfa-numérico com 8 posições).
+				<br/>
+				<br/>
+				A string enviada vai ficar no seguinte formato:<br/>
+				<strong>9999999XXXXXXXXXXXXXXXXXX</strong>
+				<br/>
+				<br/>
+				Porém conforme verificamos anteriormente, vamos utilizar o mainframe-connector-mock que deve receber nas primeiras 8 posicoes um valor alfa-numérico representando o nome do arquivo que contém o retorno da transação alvo, 
+				ficando da seguinte maneira:<br/>
+				<strong>XXXXXXXX9999999XXXXXXXXXXXXXXXXXX</strong>
+				<br/>
+				<br/>
+				A primeira parte será feita da maneira mais simples possível: vamos receber a matricula como parametro para execução, e enviar os demais valores como default, ficará assim:<br/>
+				Nome do arquivo: TRANC1\b\b\b - 8 Posições<br/>
+				Student id: Parametro de entrada - 7 posições<br/>
+				Usuário: USUARIO123 - 10 posições<br/>
+				Senha:SENHA123 - 8 posições<br/>
+				<br/>
+				A String de entrada ficará assim:<br/>			
+				<strong>[TRANC1&nbsp;&nbsp;&nbsp;&lt;PARAMETRO-DE-ENTRADA(7POSICOES)&gt;USUARIO123SENHA123]</strong>     
 			</p>
 			
 			<h3>8 Integrando o projeto com o connector através do JMFConnector</h3>
