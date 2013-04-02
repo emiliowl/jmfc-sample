@@ -62,7 +62,6 @@
 ================================================== -->
 		<header class="jumbotron masthead">
 		</header>
-
 			<h1>Iniciando com JMFConnector</h1>
 			<p class="lead">Este guia cobre os principios b&aacute;sicos para:</p>
 			<ul class="unstyled">
@@ -133,14 +132,14 @@
 00400   02 STUDENT-NAME.                                                   00400
 00500      03 FIRST-NAME        PIC XXXXXXXXXX.                            00500
 00500      03 SURNAME           PIC X(15).                                 00500
-00500      03 PARENTS-NAMES.                                               00500
-00600         04 FATHER-NAME    PIC XXXXXXXXXX.                            00600
-00600         04 MOTHER-NAME    PIC XXXXXXXXXX.                            00600
-00700*0000 DETALHES DAS PARCELAS DO ESTUDANTE                              00700
-0080001 QT-PARCELAS             PIC 999.                                   00800
-0090001 PARCELAS OCCURS 1 TIMES DEPENDING ON QT-PARCELAS.                  00900                            
-00900   02 NUMERO               PIC 99.                                    00900
-00900   03 VALOR                PIC +9999V99.                              00900
+00600   02 PARENTS-NAMES.                                                  00600
+00700      03 FATHER-NAME    PIC XXXXXXXXXX.                               00700
+00700      03 MOTHER-NAME    PIC XXXXXXXXXX.                               00700
+00800*0000 DETALHES DAS PARCELAS DO ESTUDANTE                              00800
+00900   02 QT-PARCELAS             PIC 999.                                00900
+01000   02 PARCELAS OCCURS 1 TIMES DEPENDING ON QT-PARCELAS.               01000                            
+01000      03 NUMERO               PIC 99.                                 01000
+01000      03 VALOR                PIC +9999V99.                           01000
 </pre>				
 			</p>
 			
@@ -199,7 +198,7 @@
 			<h3>7 Integrando o projeto com o connector através de data parsing na aplicação</h3>
 			<p>
 				Já sabemos como funciona a biblioteca de comunicação com o mainframe e já temos os books de entrada e saída.
-				Agora precisamos preparar nosso projeto para enviar os parametros esperados pelo mainframe, receber o retorno, tratar os dados recebidos e enviar o e-mail esperado.
+				Agora precisamos preparar nosso projeto para enviar os parametros esperados pelo mainframe, receber o retorno, tratar os dados recebidos e enviar o e-mail de cobrança.
 				<br/>
 				<br/>
 				Primeiro vamos analisar o book de entrada:
@@ -215,20 +214,289 @@
 				<strong>XXXXXXXX9999999XXXXXXXXXXXXXXXXXX</strong>
 				<br/>
 				<br/>
-				A primeira parte será feita da maneira mais simples possível: vamos receber a matricula como parametro para execução, e enviar os demais valores como default, ficará assim:<br/>
-				Nome do arquivo: TRANC1\b\b\b - 8 Posições<br/>
-				Student id: Parametro de entrada - 7 posições<br/>
-				Usuário: USUARIO123 - 10 posições<br/>
-				Senha:SENHA123 - 8 posições<br/>
+				<div class="well">
+					A primeira parte será feita da maneira mais simples possível: vamos receber a matricula como parametro para execução, e enviar os demais valores como default, ficará assim:<br/>
+					<table class="table table-striped">
+						<thead>
+							<tr>
+								<th>Parametro</th>
+								<th>Valor</th>
+								<th>Tipo</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Nome do arquivo</td>
+								<td>TRANC1\b\b\b</td>
+								<td>Alfa-numérico de 8 Posições</td>
+							</tr>
+							<tr>
+								<td>Matrícula</td>
+								<td>Parametro de entrada</td>
+								<td>Numérico de 7 posições</td>
+							</tr>
+							<tr>
+								<td>Usuário</td>
+								<td>USUARIO123</td>
+								<td>Alfa-numérico de 10 posições</td>
+							</tr>
+							<tr>
+								<td>Senha</td>
+								<td>SENHA123</td>
+								<td>Alfa-numérico de 8 posições</td>
+							</tr>
+						</tbody>
+					</table>
+					A String de entrada ficará assim:<br/>			
+					<strong>[TRANC1&nbsp;&nbsp;&nbsp;&lt;PARAMETRO-DE-ENTRADA(7POSICOES)&gt;USUARIO123SENHA123]</strong>
+				</div>     
+			</p>
+			<p>
+				Esta primeira parte vai se aplicar como ponto de entrada para o próximo passo, por isso vamos abrir uma sessão aqui mesmo.
+				<h4>Criando o projeto específico com data parsing</h4>
 				<br/>
-				A String de entrada ficará assim:<br/>			
-				<strong>[TRANC1&nbsp;&nbsp;&nbsp;&lt;PARAMETRO-DE-ENTRADA(7POSICOES)&gt;USUARIO123SENHA123]</strong>     
+				Para fazer esta etapa será necessário criarmos o nossa classe de entrada (Entry) que receberá os parametros, fará chamada ao mainframe e enviará a string retornada
+				para a classe Billing que fará o tratamento nos dados recebidos para criar o e-mail de cobrança para o estudante, entregando o processamento para a classe MailSender
+				que finalizará o processo enviando o e-mail.
 			</p>
 			
-			<h3>8 Integrando o projeto com o connector através do JMFConnector</h3>
+			<div class="alert alert-info">
+				Recomendamos e fizemos nosso desenvolvimento incremental repeitando o ciclo do TDD (red, green, refactory), porém vamos pular a etapa 
+				dos testes no tutorial para brevidade. Caso tenha interesse os testes estão disponíveis no GitHub, junto aos fontes do projeto.
+			</div>
 			<p>
-				O JMFConnector é uma biblioteca especializada em traduzir BOOKs da Linguagem Cobol para a estruturas de dados no formato de mapas para a Linguagem Java, 
-				tornando o desenvolvimento para as equipes de COBOL e Java muito mais simples e a comunicação entre elas muito mais dinâmica.
+				Começamos criando nossa class Entry. Ela basicamente recebe como entrada o STUDENT-ID, monta a string
+				de envio para a transação, recebe o retorno e repassa para a class Billing.
+				Este procedimento parece simples, mas como estamos utilizando data parsing, vamos nos deparar com alguns problemas:
+				<ol>
+					<li>Esta classe deve conhecer o book, pois seu parametro de entrada deve coincidir com o STUDENT-ID (numérico de 7 posições);</li>
+					<li>Esta classe deve tratar o parametro recebido para que ele esteja de acordo com o parametro descrito acima;</li>
+					<li>Esta classe deve tratar os erros de conexao com mainframe, além de erros de parsing e erros de negócio (e se a matrícula informada não existir?);</li>
+				</ol>
+				<div class="alert alert-error">
+					<strong>É muita responsabilidade!</strong> Este é um dos principais problema quando utilizamos uma API de conexão com o mainframe que é muito simples.
+					Além de termos de nos preocupar com aspectos funcionais de negócio do software, precisamos nos preocupar com detalhes arquiteturais
+					que podem fazer toda a diferença na hora da manutenção. Isso gera muito mais complexidade no projeto e na maioria das vezes expande
+					os prazos de execução em mais de 30%.
+				</div>
+				Nossa classe Entry, acabou ficando com 3 métodos: main, clean, fillWithLeftZeros:
+			</p>
+			<p>
+				<div class="alert alert-error">
+					Mais uma vez, sabemos que do ponto de vista de divisão de responsabilidades estes métodos deveriam estar
+					em classes auxiliares para que pudessem ser reaproveitados tornando o código mais coeso.
+					No entanto, por se tratar de um exemplo didático, estamos priorizando a brevidade.
+				</div>
+				<span class="label label-info">main</span>
+				<pre>
+public static void main(String[] args) {
+	if (args.length != 1)
+			throw new IllegalArgumentException("Expecting only 1 parameter.");
+	System.out.println("STUDENT-ID: " + args[0]); //printing the student-id received for test purpose only
+	
+	//call the mainframe connector with the string:
+	String input = "TRANC1   " + clean(args[0]) +  "USUARIO123SENHA123";
+	System.out.println("string sent: " + input); //printing the input string for test purpose only
+	String output = ImsConnectMock.getConnection().call(input);
+	System.out.println("string received: " + output); //printing the output string for test purpose only
+}
+				</pre>
+				<span class="label label-info">clean</span>
+				<pre>
+private static String clean(String studentId) {
+	int positionCut = 7;
+	if(studentId.length() < 7)
+		positionCut = studentId.length();
+	
+	String newString = studentId.substring(0, positionCut);
+	
+	return fillWithLeftZeros(Integer.parseInt(newString) + "", 7);
+}
+				</pre>
+				<span class="label label-info">fillWithLeftZeros</span>
+				<pre>
+private static String fillWithLeftZeros(String number, int numberSize) {
+	String _number = number;
+	while (_number.length() < numberSize) {
+		_number = "0" + _number;
+	}
+	return _number;
+}
+				</pre>
+			</p>
+			<p>
+				O próximo passo é criar a classe Billing que será responsável por traduzir o retorno do mainframe e montar um e-mail para ser enviado como cobrança.<br/>
+				Problemas a vista!
+				Mais uma vez, este procedimento parece simples, mas como estamos utilizando data parsing, vamos nos deparar com alguns detalhes:
+				<ol>
+					<li>Esta classe deve conhecer o book, pois deverá traduzir todos os parametros recebidos, respeitando suas posições e formatos;</li>
+					<li>Esta classe deve tratar erros de parsing e erros de negócio (número de parcelas inválido);</li>
+					<li>Esta classe deve saber tratar com campos complexos (parcelas) em que sua quantidade depende do campo QT-PARCELAS</li>
+				</ol>
+				<div class="alert alert-error">
+					<strong>É muita responsabilidade!</strong>
+				</div>
+				Como podemos observar nossa classe Billing, ficou uma representação de um objeto faturamento, contendo as mesmas informações do Book.<br/>
+				Além disso sua implementação ficou extremamente frágil e acoplada ao book do mainframe. 
+				<span class="label label-important">Pesadelo na hora da manutenção</span>
+				<pre>
+/**
+ * Create a billing from an String entry, according to the following format:
+ * STUDENT-INFO.                                      
+ * STUDENT-ID        	PIC 9(7).                      
+ * STUDENT-NAME.                                      
+ * 03 FIRST-NAME        PIC XXXXXXXXXX.               
+ * 03 SURNAME           PIC X(15).                    
+ * PARENTS-NAMES.                                     
+ * 03 FATHER-NAME    PIC XXXXXXXXXX.                  
+ * 03 MOTHER-NAME    PIC XXXXXXXXXX.                  
+ * DETALHES DAS PARCELAS DO ESTUDANTE                 
+ * QT-PARCELAS             PIC 999.                   
+ * PARCELAS OCCURS 1 TIMES DEPENDING ON QT-PARCELAS.                          
+ * 03 NUMERO               PIC 99.                    
+ * 03 VALOR                PIC +9999V99.              
+ * @param billingInfo
+ */
+public Billing(String billingInfo) {
+	if (billingInfo.length() < 55)
+		throw new IllegalArgumentException("Comunicação inválida - String de entrada deve ter no mínimo 55 caracteres.");
+	setStudentId(billingInfo.substring(0, 7));
+	setFirstName(billingInfo.substring(7, 17));
+	setSurname(billingInfo.substring(17, 32));
+	setFatherName(billingInfo.substring(32, 42));
+	setMotherName(billingInfo.substring(42, 52));
+	setQuantidadeParcelas(billingInfo.substring(52, 55));
+	//calculando parcelas
+	parcelas = new ArrayList<Parcela>();
+	for (int i = 0, init=55; i < quantidadeParcelas; i++) {
+		if (billingInfo.length() < init + 8)
+			throw new IllegalArgumentException("Comunicação inválida - Dados insuficientes para calcular próxima parcela");
+		int number = Integer.parseInt(billingInfo.substring(init, init += 2));
+		double value = new Double(billingInfo.substring(init, init += 4) 
+				+ "." 
+				+ billingInfo.substring(init, init += 2));
+		Parcela parcela = new Parcela(number, value);
+		parcelas.add(parcela);
+	}
+}				
+				</pre> 
+				
+			Finalizamos inserindo a chamada para o método sendMail do MailSender, passando um objeto Billing como parametro, no método main de Entry.<br/>
+				
+			</p>
+			<h3>8 Integrando o projeto com o connector através do JMFConnector</h3>
+			
+			<p>
+				Agora que já conhecemos os objetivos do projeto e já fizemos uma implementação utilizando apenas a data parsing, vamos experimentar realizar a mesma 
+				tarefa utilizando o JMFConnector, para conhecer os benefícios da ferramenta.
+				<h4>Criando o projeto específico com JMFConnector</h4>
+				<br/>
+				Vamos relembrar como ficou nosso último design:<br/>
+ 					<p class="muted">
+  						Para fazer esta etapa será necessário criarmos o nossa classe de entrada (Entry) que receberá os parametros, fará chamada ao mainframe e enviará a string retornada
+						para a classe Billing que fará o tratamento nos dados recebidos para criar o e-mail de cobrança para o estudante, entregando o processamento para a classe MailSender
+						que finalizará o processo enviando o e-mail.
+					</p>
+					
+				<br/>
+				<div class="well">
+					<div class="alert alert-success">
+						<strong>Precisamos de um design mais inteligente!</strong>
+					</div>
+					Nossa solução utilizando JMFConnector pode ser muito mais elegante e simples!<br/>
+					Criamos a classe Entry que receberá os parametros, mas não fará a chamada direta ao mainframe.
+					Primeiro ela vai carregar o book de entrada e saída para a transação que será chamada através do JMFConnector, em seguida, fará a chamada ao mainframe através da string de
+					conexão gerada pelo JMFConnector, enviando o retorno para o JMFConnector que montará o book de retorno.<br/>
+					Aqui temos 2 opções: Entregar o objeto Book para o Billing ou tratar o objeto Book e enviar apenas os dados necessários para o Billing.<br/>
+					Adotaremos a estratégia 2 para que apenas uma classe do nosso projeto fique acoplada a API do JMFConnector, de modo que trocar a fonte de dados se torne uma tarefa simples
+					no futuro.<br/>
+					Na sequencia seguimos o processo anterior, enviamos a classe Billing para a classe MailSender que fará o envio da cobrança.
+				</div>
+				
+				<h4>Entendendo o funcionamento do JMFConnector</h4>
+				<p>
+					O JMFConnector consegue interpretar e traduzir um book Cobol para estruturas de dados no formato de mapas na linguagem Java.<br/>
+					Isso significa que seu time Java, só precisa conhecer quais são os campos do Book Cobol, para capturá-los nos mapas gerados pelo JMFConnector. Todo o tratamento dos dados
+					e a garantia de integridade das informações fica por conta do JMFConnector.<br/><br/>
+				</p>
+				<span class="label label-info">Entenda melhor o funcionamento do JMFConnector:</span>
+				<div class="well">
+					Para o JMFConnector se integrar ao seu projeto, são necessários dois passos:
+					<ol>
+						<li>Configurar a biblioteca no classpath da aplicação;</li>
+						<li>Inserir os books em formato txt, e configurá-los na API;</li>
+					</ol>
+					<h5>1. Classpath</h5>
+					<p>
+						Insira a biblioteca no classpath da aplicação seguindo os mesmos procedimentos adotados no passo 6.
+						Para conseguir uma versão da biblioteca entre em contato com nosso time de vendas.
+					</p>
+					<h5>2. Inserindo os books</h5>
+					<p>
+						O JMFConnector precisa dos books para converter os dados presentes no books em estruturas de mapas.
+						Depois de feita a conversão, esta informação é armazenada em memória (podendo ser em mapas ou cache distribuído).
+						<br/>
+						<div class="alert alert-info">
+							<strong>A API possui 3 classes essenciais que você deve conhecer:</strong><br/>
+							BookStore - Responsável por armazenar os books em memória, baseado na localização física passada como parametro;<br/>
+							Book - Representa um book em memória. Se baseia em uma implementação de mapas da linguagem Java;<br/>
+							MainframeParser - Responsável por popular os books e alterar suas informações de maneira simples e segura;<br/>
+						</div>
+					</p>	
+				</div>
+				<br/>
+				Nossa classe Entry ficou com dois métodos: main e init():
+				<div class="alert alert-success">
+					Repare como utilizando o JMFConnector a classe tem sua preocupação voltada muito mais em aspectos funcionais de negócio(o real motivo de sua existência)
+					do que em resolver aspectos não funcionais como estabelecer o protocolo de comunicação e fazer parsing/tratamento de dados.
+				</div>
+				<br/>
+				<span class="label label-success">main</span>
+				<pre>
+public static void main(String[] args) {
+	if (args.length != 1)
+			throw new IllegalArgumentException("Expecting only 1 parameter.");
+	System.out.println("STUDENT-ID: " + args[0]); //printing the student-id received for test purpose only
+	
+	//call jmfc for create the trancode
+	try {
+		init();
+		BookStore.getBook("tranc1-in").get("STUDENT-INFO").get("STUDENT-ID").setJavaValue(args[0]);
+		BookStore.getBook("tranc1-in").get("STUDENT-INFO").get("CREDENTIALS").get("USER").setJavaValue("USUARIO123");
+		BookStore.getBook("tranc1-in").get("STUDENT-INFO").get("CREDENTIALS").get("PASSWORD").setJavaValue("SENHA123");
+		
+		//call the mainframe connector with the string:
+		String input = MainframeParser.parseBookToString(BookStore.getBook("tranc1-in"));
+		input = "TRANC1   ".concat(input);
+		System.out.println("string sent: " + input); //printing the input string for test purpose only
+		String output = ImsConnectMock.getConnection().call(input);
+		System.out.println("string received: " + output); //printing the output string for test purpose only.
+	} catch (IOException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	} catch (BusinessException e) {
+		// TODO Auto-generated catch block
+	 	e.printStackTrace();
+	}
+}
+				</pre>
+				<span class="label label-success">init</span>
+				<pre>
+private static void init() throws IOException, BusinessException {
+	Map&lt;String, String&gt; books = new HashMap&lt;String, String&gt;();
+	books.put("tranc1-in", Entry.class.getClassLoader().getResource("TRANC1-IN.book").getPath());
+	books.put("tranc1-out", Entry.class.getClassLoader().getResource("TRANC1-OUT.book").getPath());
+	BookStore.loadBooks(books);
+}
+				</pre>
+			</p>
+			<p>
+				Como não poderia ser diferente nosso próximo passo é fazer a implementação da classe Billing. Desta vez a classe deve se ater apenas em representar uma fatura.<br/>
+				É claro que ainda existe a responsabilidade de conhecer os campos do Book que vem do mainframe, no entanto, como pode ser observado no código da classe Entry, todo parsing e 
+				conversão ocorre dentro do JMFConnector, restando ao desenvolvedor da classe Billing focar em resolver as questões funcionais do software.
+			</p>
+			<p>
+				
 			</p>
 			
 			<h3>9 Enfrentando mudanças</h3>
