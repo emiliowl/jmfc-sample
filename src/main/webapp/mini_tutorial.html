@@ -461,16 +461,23 @@ public static void main(String[] args) {
 	//call jmfc for create the trancode
 	try {
 		init();
+		//set the values for call mainframe
 		BookStore.getBook("tranc1-in").get("STUDENT-INFO").get("STUDENT-ID").setJavaValue(args[0]);
 		BookStore.getBook("tranc1-in").get("STUDENT-INFO").get("CREDENTIALS").get("USER").setJavaValue("USUARIO123");
 		BookStore.getBook("tranc1-in").get("STUDENT-INFO").get("CREDENTIALS").get("PASSWORD").setJavaValue("SENHA123");
 		
 		//call the mainframe connector with the string:
-		String input = MainframeParser.parseBookToString(BookStore.getBook("tranc1-in"));
-		input = "TRANC1   ".concat(input);
+		String input = "TRANC1   ".concat(MainframeParser.parseBookToString(BookStore.getBook("tranc1-in")));
+		
 		System.out.println("string sent: " + input); //printing the input string for test purpose only
 		String output = ImsConnectMock.getConnection().call(input);
 		System.out.println("string received: " + output); //printing the output string for test purpose only.
+		
+		MainframeParser.populateBook(output, BookStore.getBook("tranc1-out"));
+								
+		Billing billing = BillingFactory.createBilling(BookStore.getBook("tranc1-out").get("STUDENT-INFO"));
+		MailSender.sendMail(billing);
+				
 	} catch (IOException e) {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
@@ -496,19 +503,82 @@ private static void init() throws IOException, BusinessException {
 				conversão ocorre dentro do JMFConnector, restando ao desenvolvedor da classe Billing focar em resolver as questões funcionais do software.
 			</p>
 			<p>
-				
+				<div class="alert alert-info">
+					Utilizamos o conceito de factory para distribuir melhor as responsabilidades nesse caso. A criação do objeto Billing se tornou muito mais simples utilizando o JMFConnector.<br/>
+					Nosso design ficou bastante simples: 
+					<ol>
+						<li>
+							A classe Entry localiza e popula o Book do mainframe integrando o seu conector específico (no exemplo o mf-communicator-mock) ao JMFConnector
+						</li>
+						<li>
+							A classe Entry solicita um objeto Billing para a BillingFactory enviando como parametro o primeiro nó do book (STUDENT-INFO)
+						</li>
+						<li>
+							A fabrica de faturamentos cria um novo objeto Billing a partir dos dados do book (sem data parsing, sem se preocupar com tipagem, apenas utilizando os campos que interessam)
+							 e devolve para Entry
+						</li>
+						<li>
+							Por fim a classe Entry solicita o envio do e-mail ao objeto MailSender enviando o objeto Billing que se tornou um POJO.
+						</li>
+					</ol>
+				</div>
+				<span class="label label-info">Integra o mf-communicator-mock ao JMFConnector</span>
+				<pre>
+//call the mainframe connector with the string:
+String input = "TRANC1   ".concat(MainframeParser.parseBookToString(BookStore.getBook("tranc1-in")));
+
+System.out.println("string sent: " + input); //printing the input string for test purpose only
+String output = ImsConnectMock.getConnection().call(input);
+System.out.println("string received: " + output); //printing the output string for test purpose only.
+
+MainframeParser.populateBook(output, BookStore.getBook("tranc1-out"));
+				</pre>
+				<span class="label label-info">Solicita criação do objeto Billing para a BillingFactory</span>
+				<pre>
+Billing billing = BillingFactory.createBilling(BookStore.getBook("tranc1-out").get("STUDENT-INFO"));
+				</pre>
+				<span class="label label-info">BillingFactory cria um novo Billing</span>
+				<pre>
+public static Billing createBilling(Book studentInfo) throws BusinessException {
+	return new Billing(
+			studentInfo.get("STUDENT-ID").getIntValue(),
+			studentInfo.get("STUDENT-NAME").get("FIRST-NAME").getValue().trim(),
+			studentInfo.get("STUDENT-NAME").get("SURNAME").getValue().trim(),
+			studentInfo.get("PARENTS-NAMES").get("FATHER-NAME").getValue().trim(),
+			studentInfo.get("PARENTS-NAMES").get("MOTHER-NAME").getValue().trim(),
+			getPortionsFromStudentInfo(studentInfo));
+}
+
+private static List&lt;Parcela&gt; getPortionsFromStudentInfo(Book studentInfo) throws BusinessException {
+	List&lt;Parcela&gt;portions = new ArrayList&lt;Parcela&gt;();
+	int portionQuantity = studentInfo.get("QT-PARCELAS").getIntValue();
+	for (int i = 1; i &lt;= portionQuantity; i++) {
+		int number = studentInfo.get("PARCELAS", i).get("NUMERO").getIntValue();
+		double value = studentInfo.get("PARCELAS", i).get("VALOR").getDoubleValue();
+		
+		Parcela portion = new Parcela(number, value);
+		portions.add(portion);
+	}
+		return portions;
+}
+				</pre>
+				Comparando a solução utilizando o JMFConnector podemos observar diversos ganhos, não apenas nos aspectos mais óbvios como o design da solução, 
+				mas principalmente na robustez e simplicidade da solução.<br/>
+				Resolvemos o problema do acoplamento ao Book, utilizando estruturas de mapas, de modo que não precisamos mais saber a posição dos campos, apenas seus nomes.<br/>
+				Resolvemos o problema de muitas responsabilidades para as classes pois o JMFConnector é reponsável por data parsing e tratamento de tipos<br/>
+				Resolvemos o problema da fragilidade do código pois a solução se tornou muito mais robusta e flexivel a mudanças, pois agora todo o protocolo de comunicação ocorre dentro
+				do JMFConnector que utiliza de avançados algoritmos de automatos para entendimento do book e realiza o parsing da String de comunicação de maneira muito mais elegante do que
+				utilizando substring de posições fixas e hardcoded.
 			</p>
 			
 			<h3>9 Enfrentando mudanças</h3>
 			<p>
-				O JMFConnector é uma biblioteca especializada em traduzir BOOKs da Linguagem Cobol para a estruturas de dados no formato de mapas para a Linguagem Java, 
-				tornando o desenvolvimento para as equipes de COBOL e Java muito mais simples e a comunicação entre elas muito mais dinâmica.
+				Em breve...
 			</p>
 			
 			<h3>10 Opções de configuração avançada</h3>
 			<p>
-				O JMFConnector é uma biblioteca especializada em traduzir BOOKs da Linguagem Cobol para a estruturas de dados no formato de mapas para a Linguagem Java, 
-				tornando o desenvolvimento para as equipes de COBOL e Java muito mais simples e a comunicação entre elas muito mais dinâmica.
+				Em breve...
 			</p>
 	</div>
 		<!-- /.marketing -->
