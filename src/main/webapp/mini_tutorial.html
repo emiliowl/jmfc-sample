@@ -562,18 +562,132 @@ private static List&lt;Parcela&gt; getPortionsFromStudentInfo(Book studentInfo) 
 		return portions;
 }
 				</pre>
+				
 				Comparando a solução utilizando o JMFConnector podemos observar diversos ganhos, não apenas nos aspectos mais óbvios como o design da solução, 
 				mas principalmente na robustez e simplicidade da solução.<br/>
-				Resolvemos o problema do acoplamento ao Book, utilizando estruturas de mapas, de modo que não precisamos mais saber a posição dos campos, apenas seus nomes.<br/>
-				Resolvemos o problema de muitas responsabilidades para as classes pois o JMFConnector é reponsável por data parsing e tratamento de tipos<br/>
-				Resolvemos o problema da fragilidade do código pois a solução se tornou muito mais robusta e flexivel a mudanças, pois agora todo o protocolo de comunicação ocorre dentro
-				do JMFConnector que utiliza de avançados algoritmos de automatos para entendimento do book e realiza o parsing da String de comunicação de maneira muito mais elegante do que
-				utilizando substring de posições fixas e hardcoded.
+				<div class="alert alert-success">
+					<ul class="unstyled">
+						<li><i class="icon-ok"></i> <strong>Resolvemos o problema do acoplamento ao Book, utilizando estruturas de mapas, de modo que não precisamos mais saber a posição dos campos, apenas seus nomes.</strong></li>
+						<li><i class="icon-ok"></i> <strong>Resolvemos o problema de muitas responsabilidades para as classes pois o JMFConnector é reponsável por data parsing e tratamento de tipos</strong></li>
+						<li><i class="icon-ok"></i> <strong>Resolvemos o problema da fragilidade do código pois a solução se tornou muito mais robusta e flexivel a mudanças, pois agora todo o protocolo de comunicação ocorre dentro
+															do JMFConnector que utiliza de avançados algoritmos de automatos para entendimento do book e realiza o parsing da String de comunicação de maneira muito mais elegante do que
+															utilizando substring de posições fixas e hardcoded</strong></li>
+					</ul>
+					
+					
+				</div>
 			</p>
 			
 			<h3>9 Enfrentando mudanças</h3>
 			<p>
-				Em breve...
+				O processo de desenvolvimento utilizando o JMFConnector se mostrou muito mais robusto, assertivo e seguro. Além de ser mais produtivo pois os desenvolvedores não precisam se preocupar
+				com o protocolo de comunicação, mantendo seu foco no que realmente importa: <b>resolver os problemas do seu negócio.</b><br/>
+				Todo desenvolvedor, arquiteto e até gestor de projeto sabe que as coisas começam a se complicar quando chegamos no momento de mudanças. Trocar o book de uma transação costuma ser extremamente
+				custoso, pois grandes organizações disponibilizam suas transações como serviços e a mudança na trancode implica muitas vezes no envolvimento de DIVERSOS sistemas, o que costuma ser fator 
+				multiplicador no custo da mudança.
+			</p>
+			<p>
+				Para exemplificar o ganho real de utilizar o JMFConnector em um cenário de mudança, vamos simular uma alteração no book de uma transação e verificar o custo desta alteração no cenário com 
+				e sem o JMFConnector.
+			</p>
+			<div class="well">
+				Vamos considerar as seguintes mudanças no book de retorno:
+				<ul>
+					<li>Foi retirado do retorno o <span class="label label-important">STUDENT-ID</span> pois ele já é um parametro de entrada</li>
+					<li>Foi incluido o apelido do estudante dentro do campo <span class="label">STUDENT-NAME</span>, com 6 posições nomeado <span class="label label-success">STUDENT-LOGIN</span>, após o campo <span class="label">SURNAME</span> (não vamos utilizar)</li>
+				</ul>
+
+				<span class="label label-info">Novo BOOK de Saída</span>
+				<pre>
+00100*7890 SAIDA PARA O PROGRAMA QUE CALCULA PARCELAS DE ESTUDANTE         00100
+00200*7890 COM MATRICULA ATIVA                                             00200
+0030001 STUDENT-INFO.                                                      00300
+00400   02 STUDENT-NAME.                                                   00400
+00500      03 FIRST-NAME        PIC XXXXXXXXXX.                            00500
+00500      03 SURNAME           PIC X(15).                                 00500
+00500      03 LOGIN           	PIC X(6).                                  00500
+00600   02 PARENTS-NAMES.                                                  00600
+00700      03 FATHER-NAME    PIC XXXXXXXXXX.                               00700
+00700      03 MOTHER-NAME    PIC XXXXXXXXXX.                               00700
+00800*0000 DETALHES DAS PARCELAS DO ESTUDANTE                              00800
+00900   02 QT-PARCELAS             PIC 999.                                00900
+01000   02 PARCELAS OCCURS 1 TIMES DEPENDING ON QT-PARCELAS.               01000                            
+01000      03 NUMERO               PIC 99.                                 01000
+01000      03 VALOR                PIC +9999V99.                           01000
+</pre>
+				Apesar de simples estas mudanças vão impactar no book e utilizando data parsing na aplicação teremos que modificar nossa classe de NEGÓCIO Billing!<br/>
+				As alterações estão destacadas em vermelho:<br/>
+				<span class="label label-important">Nova classe Billing:</span>
+				<pre>
+
+/**
+ * Create a billing from an String entry, according to the following format:
+ * STUDENT-INFO.                                                         
+ * STUDENT-NAME.                                      
+ * 03 FIRST-NAME        PIC XXXXXXXXXX.               
+ * 03 SURNAME           PIC X(15).                  
+ * 03 LOGIN           	PIC X(6).  (WE DON'T USE IT)
+ * PARENTS-NAMES.                                     
+ * 03 FATHER-NAME    PIC XXXXXXXXXX.                  
+ * 03 MOTHER-NAME    PIC XXXXXXXXXX.                  
+ * DETALHES DAS PARCELAS DO ESTUDANTE                 
+ * QT-PARCELAS             PIC 999.                   
+ * PARCELAS OCCURS 1 TIMES DEPENDING ON QT-PARCELAS.                          
+ * 03 NUMERO               PIC 99.                    
+ * 03 VALOR                PIC +9999V99.              
+ * @param billingInfo
+ */
+public Billing(String billingInfo) {
+	<span style="background-color:#F2DEDE">if (billingInfo.length() < 54)
+		throw new IllegalArgumentException("Comunicação inválida - String de entrada deve ter no mínimo 54 caracteres.");
+	setFirstName(billingInfo.substring(0, 10));
+	setSurname(billingInfo.substring(10, 25));
+	setFatherName(billingInfo.substring(31, 41));
+	setMotherName(billingInfo.substring(41, 51));
+	setQuantidadeParcelas(billingInfo.substring(51, 54));
+	//calculando parcelas
+	parcelas = new ArrayList<Parcela>();
+	for (int i = 0, init=54; i < quantidadeParcelas; i++) {</span>
+		if (billingInfo.length() < init + 9)
+			throw new IllegalArgumentException("Comunicação inválida - Dados insuficientes para calcular próxima parcela");
+		int number = Integer.parseInt(billingInfo.substring(init, init += 2));
+		double value = new Double(billingInfo.substring(init, init += 7).replace(',', '.'));
+		Parcela parcela = new Parcela(number, value);
+		parcelas.add(parcela);
+	}
+}
+				</pre>
+				A mesma alteração utilizando o JMFConnector se mostrou muito mais simples:
+				<ul>
+					<li>Substituímos o book TRANC1-OUT pelo seu novo formato</li>
+					<li>Modificamos o objeto Entry para enviar o studentId como parametro para o objeto BillingFactory</li>
+					<li>Modificamos o objeto BillingFactory para receber o studentId como parametro (separado do book)</li>
+				</ul>
+				As alterações estão destacadas em verde:<br/>
+<span class="label label-success">Alterações na classe Entry:</span>
+				<pre>
+Billing billing = BillingFactory.createBilling(<span style="background-color: #DFF0D8;">BookStore.getBook("tranc1-in").get("STUDENT-INFO").get("STUDENT-ID").getIntValue(),</span> BookStore.getBook("tranc1-out").get("STUDENT-INFO"));
+				</pre>
+				<span class="label label-success">Alterações na classe BillingFactory:</span>
+				<pre>
+public static Billing createBilling(<span style="background-color: #DFF0D8;">int studentId</span>, Book studentInfo) throws BusinessException {
+		return new Billing(<span style="background-color: #DFF0D8;">studentId</span>,
+				studentInfo.get("STUDENT-NAME").get("FIRST-NAME").getValue().trim(),
+				studentInfo.get("STUDENT-NAME").get("SURNAME").getValue().trim(),
+				studentInfo.get("PARENTS-NAMES").get("FATHER-NAME").getValue().trim(),
+				studentInfo.get("PARENTS-NAMES").get("MOTHER-NAME").getValue().trim(),
+				getPortionsFromStudentInfo(studentInfo));
+	}
+				</pre>
+			</div>
+			<p>
+				<div>
+					Repare que enquanto a alteração do projeto utilizando data parsing foi relativamente crítica, pois tivemos de alterar nosso objeto de negócio Billing e recalcular todas as posições, utilizando o JMFConnector simplesmente IGNORAMOS as alterações posicionais que a criação do campo LOGIN causou. Como não o estamos utilizando, ele simplesmente
+					não impactou nosso projeto. Se não houvesse a alteração do campo STUDENT-ID que estávamos utilizando, nem precisaríamos ter alterado nosso código fonte, bastava substituir o BOOK!<br/>		 
+				</div>
+				<div class="alert alert-success">
+					Agora imagine o impacto dessa mudança em um ambiente corporativo: utilizando JMFConnector <span class="label label-success">economizariamos centenas de horas em desenvolvimento/testes/homologação</span> de diversos sistemas conectados a esta transação!
+				</div>	
 			</p>
 			
 			<h3>10 Opções de configuração avançada</h3>
