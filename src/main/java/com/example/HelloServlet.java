@@ -52,12 +52,12 @@ public class HelloServlet extends HttpServlet {
 		out.print("				</a> <a class=\"brand\" href=\"./index2.html\">JMFConnector</a>");
 		out.print("				<div class=\"nav-collapse collapse\">");
 		out.print("					<ul class=\"nav\">");
-		out.print("						<li class=\"\"><a href=\"./index.html\">Vis„o Geral</a></li>");
-		out.print("						<li class=\"active\"><a href=\"./demostracao.html\">DemostraÁ„o</a></li>");
+		out.print("						<li class=\"\"><a href=\"./index.html\">Vis√£o Geral</a></li>");
+		out.print("						<li class=\"active\"><a href=\"./demostracao.html\">Demonstra√ß√£o</a></li>");
 		out.print("						<li class=\"\"><a href=\"./mini_tutorial.html\">Mini Tutorial</a></li>");
 		out.print("						<li class=\"\"><a href=\"#\">Download</a></li>");
 		out.print("						<li class=\"divider-vertical\"></li>");
-		out.print("						<li class=\"\"><a href=\"#\">Sobre NÛs</a></li>");
+		out.print("						<li class=\"\"><a href=\"#\">Sobre N√≥s</a></li>");
 		out.print("					</ul>");
 		out.print("				</div>");
 		out.print("			</div>");
@@ -80,14 +80,14 @@ public class HelloServlet extends HttpServlet {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		out.print("<body>");
-		
+		out.print("<div style='clear:both; margin-top: 50;'");
 		out.print("EXAMPLE OF THE API FUNCTIONALITY");
 		out.print("<br/>BOOK: ");
-		out.print("<br/>################################:<br/>");
+		
+		out.print("<p class=\"alert alert-info\">");
 		out.print(bookText);
-		out.print("<br/>################################<br/><br/>");
+		out.print("</p>");
+		
 		
 		out.print("<br/>BOOK INTERPRETED: <br/>");
 		out.print("<div id=\"demo1\" class=\"demo jstree jstree-0 jstree-default jstree-focused\"></div>");
@@ -104,6 +104,7 @@ public class HelloServlet extends HttpServlet {
 		
 		out.print(jsFunction);
 		out.print(getFieldsInfoDiv(new MFBook(syntacticAnalyzer.getBook())));
+		out.print("</div>");
 		out.print("</body>");
 		out.print("</html>");
 		out.flush();

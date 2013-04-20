@@ -48,6 +48,7 @@ public class BookUploader extends HttpServlet {
 		out.print("<link href=\"css/bootstrap-responsive.css\" rel=\"stylesheet\">");
 		out.print("<link href=\"css/docs.css\" rel=\"stylesheet\">");
 		out.print("<link href=\"js/google-code-prettify/prettify.css\" rel=\"stylesheet\">");
+		out.print("</head>");
 		
 		out.print("<body data-spy=\"scroll\" data-target=\".subnav\" data-offset=\"50\">");                               
 		out.print("	<div class=\"navbar navbar-fixed-top\">");
@@ -57,20 +58,18 @@ public class BookUploader extends HttpServlet {
 		out.print("				</a> <a class=\"brand\" href=\"./index2.html\">JMFConnector</a>");
 		out.print("				<div class=\"nav-collapse collapse\">");
 		out.print("					<ul class=\"nav\">");
-		out.print("						<li class=\"\"><a href=\"./index.html\">Vis„o Geral</a></li>");
-		out.print("						<li class=\"active\"><a href=\"./demostracao.html\">DemostraÁ„o</a></li>");
+		out.print("						<li class=\"\"><a href=\"./index.html\">Vis√£o Geral</a></li>");
+		out.print("						<li class=\"active\"><a href=\"./demostracao.html\">Demonstra√ß√£o</a></li>");
 		out.print("						<li class=\"\"><a href=\"./mini_tutorial.html\">Mini Tutorial</a></li>");
 		out.print("						<li class=\"\"><a href=\"#\">Download</a></li>");
 		out.print("						<li class=\"divider-vertical\"></li>");
-		out.print("						<li class=\"\"><a href=\"#\">Sobre NÛs</a></li>");
+		out.print("						<li class=\"\"><a href=\"#\">Sobre N√≥s</a></li>");
 		out.print("					</ul>");
 		out.print("				</div>");
 		out.print("			</div>");
 		out.print("		</div>");
 		out.print("</div>");
-		
-		out.print("</head>");
-		
+		out.print("<div style='clear:both; margin-top: 50;'");
 		boolean isMultipart = ServletFileUpload.isMultipartContent(req);
 		if (isMultipart) {
 
@@ -96,9 +95,11 @@ public class BookUploader extends HttpServlet {
 						
 						resp.getWriter().println("<br/><br/>EXAMPLE OF THE API FUNCTIONALITY<br/>");
 						resp.getWriter().println("<br/>BOOK: ");
-						resp.getWriter().println("<br/>################################:<br/>");
+						
+						out.print("<p class=\"alert alert-info\">");
 						resp.getWriter().println(item.getString().replace("\n", "<br />"));
-						resp.getWriter().println("<br/>################################<br/>");
+						out.print("</p>");
+						
 						
 						File uploadedFile = new File("/tmp/"+new Date().getTime()+"_"+item.getName());
 						item.write(uploadedFile);
@@ -136,7 +137,7 @@ public class BookUploader extends HttpServlet {
 			}
 
 		}
-		
+		out.print("</div>");
 		out.print("</body>");
 		out.print("</html>");
 		out.flush();
