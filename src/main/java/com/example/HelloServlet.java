@@ -43,7 +43,27 @@ public class HelloServlet extends HttpServlet {
 		out.print("<link href=\"css/docs.css\" rel=\"stylesheet\">");
 		out.print("<link href=\"js/google-code-prettify/prettify.css\" rel=\"stylesheet\">");
 		out.print("</head>");
-
+		
+        out.print("<body data-spy=\"scroll\" data-target=\".subnav\" data-offset=\"50\">");                               
+		out.print("	<div class=\"navbar navbar-fixed-top\">");
+		out.print("		<div class=\"navbar-inner\">");
+		out.print("			<div class=\"container\">");
+		out.print("				<a class=\"btn btn-navbar\" data-toggle=\"collapse\" data-target=\".nav-collapse\"> <span class=\"icon-bar\"></span> <span class=\"icon-bar\"></span> <span class=\"icon-bar\"></span>");
+		out.print("				</a> <a class=\"brand\" href=\"./index2.html\">JMFConnector</a>");
+		out.print("				<div class=\"nav-collapse collapse\">");
+		out.print("					<ul class=\"nav\">");
+		out.print("						<li class=\"\"><a href=\"./index.html\">Visão Geral</a></li>");
+		out.print("						<li class=\"active\"><a href=\"./demostracao.html\">Demostração</a></li>");
+		out.print("						<li class=\"\"><a href=\"./mini_tutorial.html\">Mini Tutorial</a></li>");
+		out.print("						<li class=\"\"><a href=\"#\">Download</a></li>");
+		out.print("						<li class=\"divider-vertical\"></li>");
+		out.print("						<li class=\"\"><a href=\"#\">Sobre Nós</a></li>");
+		out.print("					</ul>");
+		out.print("				</div>");
+		out.print("			</div>");
+		out.print("		</div>");
+		out.print("</div>");
+		
 		SyntacticAnalyzer syntacticAnalyzer = new SyntacticAnalyzer();
 		String bookText = "";
 		
